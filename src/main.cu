@@ -1,5 +1,6 @@
 #include "softmax.cuh"
 #include "baseline.cuh"
+#include <thread>
 
 int main()
 {
@@ -8,7 +9,6 @@ int main()
     float *input, *output, *cpu_output;
     int M = 1024;
     int N = 1024;
-
     input = (float *)malloc(M * N * sizeof(float));
     output = (float *)malloc(M * N * sizeof(float));
     cpu_output = (float *)malloc(M * N * sizeof(float));
@@ -16,8 +16,11 @@ int main()
     {
         input[i] = (i % 10);
     }
-    softmax_gpu(input, output, M, N);
-    cpu_softmax(input, cpu_output, M, N);
+    
+    std::thread t1(softmax_gpu, input, output, M, N);
+    std::thread t2(cpu_softmax, input, cpu_output, M, N);
+    t1.join();
+    t2.join();
     float max_diff = 0.0;
     for(int i = 0; i < M * N; i++)
     {
